@@ -1,0 +1,59 @@
+
+EXPLAIN - returns a row of information for each table used in the SELECT statement
+1)
+
+id -> The SELECT identifier.
+if the statement doesn't include subqueries or unions, the id value is 1 for each row
+The value can be NULL if the row refers to the union result of other rows
+
+select_type -> the SELECT type
+Possible values
+  1-SIMPLE: Simple SELECT(not using UNION or subqueries)
+  2-PRIMARY: Outermost SELECT
+  3-UNION: Second or later SELECT statement in a UNION
+  4-DEPENDENT UNION: Second or later SELECT statement in a UNION, dependent on outer query
+  5-UNION RESULT: Result of a UNION
+  6-SUBQUERY: First SELECT in subquery
+  7-DEPENDENT SUBQUERY: First SELECT in subquery, dependent on outer query
+  8-DERIVED: Derived table SELECT(subquery in FROM clause)
+  9-MATERIALIZED: Materalized subquery
+  10-UNCACHEABLE SUBQUERY: A subquery for which the result cannot be cached and must be re-evaluated for each row of the outer query
+  11-UNCACHEABLE UNION:The second or later select in a UNION that belongs to an uncacheable subquery
+
+table -> The table for the output row
+Possible values
+ -the name of the table to which the ouput refers
+ -<unionM, N>: union of the rows
+ -<derivedN>: derived table result for the row with id value of N.
+ -<subqueryN>: the row refers to the result of a materialized subquery with an id value of N
+
+type- It describes how tables are joined.
+
+Possible values
+  -system: The table has only one row
+  -const: The table has at most one matching row, which is read at the start of the query
+  -eq_ref:One row is read from this table for each combination of rows from the previous table.
+              It is used when all parts of an index are used by the join and the index is PRIMARY KEY or UNIQUE NOT NULL index
+  -ref: All rows with matching index values are read from the table for each combination of rows from the previous tables.
+              It is used if the key is not PRIMARY KEY or UNIQUE index.
+  -fulltext: The join is performed using a fulltext index.
+  -range: Only rows that are in a given range are retrieved, using an index to select the rows. The key column in the output row indicates which index is used.
+  -index:same as ALL except that index tree is scanned
+  -ALL: A full table scan is done for each combination of rows from the previous tables
+
+possible_keys- The possible indexes to choose to find the rows in the table
+if NULL - no relevant indexes
+
+key- The index actually chosen
+if NULL- MYSQL found no index to use for executing the query more efficiently
+
+key_len- The length of the chosen key. Determines how many parts of a multiple-part key MYSQL actually uses.
+if key column is NULL then key_len column is also NULL.
+
+ref- The columns or constant compared to the index (named in the key column) to select rows from the table
+
+rows-Estimate of rows to be examined
+
+Extra-Additional information about how MySQL resolves the query
+
+
