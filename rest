@@ -1,0 +1,82 @@
+2.1) It means that a full table scan is being done to find the row with user_id=41;
+
+2.2)No the query is not optimal because a full table scan is being done.
+Since no index is being used we can use FORCE INDEX
+
+////////////////////////////////////////////////
+3.1)
+index (commentable_id, commentable_type, user_id).
+The order would not matter  here because all the search condition form the leftmost part of the multiple-column index.
+
+////////////////////////////////////////////////////
+4.1)
+mysql> explain SELECT Article.id, Article.title, Article.content
+    -> FROM Article LEFT JOIN Comment
+    -> on Article.id=Comment.article_id
+    -> WHERE commenter_id IS NULL;
++----+-------------+---------+------+---------------+------------+---------+----------------------+------+-------------------------+
+| id | select_type | table   | type | possible_keys | key        | key_len | ref                  | rows | Extra                   |
++----+-------------+---------+------+---------------+------------+---------+----------------------+------+-------------------------+
+|  1 | SIMPLE      | Article | ALL  | NULL          | NULL       | NULL    | NULL                 |    5 | NULL                    |
+|  1 | SIMPLE      | Comment | ref  | article_id    | article_id | 4       | exercise3.Article.id |    1 | Using where; Not exists |
++----+-------------+---------+------+---------------+------------+---------+----------------------+------+-------------------------+
+2 rows in set (0.00 sec)
+
+There are two rows one for each table in the join condition
+1)id-> 1  identifier for SELECT statements
+
+2)select_type - SIMPLE (not using union or subqueries)
+
+3)table - table name for each query
+
+4)type- join type
+ALL - it means that a full table scan is done for each combination of rows from the previous tables
+
+ref - it means that matching index values are read from this table for each combination of rows from the previous table
+
+5)possible_keys - the indexes from which MySQL can choose to find rows in this table
+NULL - means no relevant indexes
+
+6)key - the key column indicates the index that MySQL actually decided to use.
+
+7)key_len - the length of the index that MySQL is using
+
+8)ref - it shows which columns or constants are used in conjunction with the index column
+
+It usually refers to the column referenced in a foreign key.
+NULL - It means no columns are used
+
+9)rows- the number of rows that MySQL estimates are required to execute the query
+
+10)extra-
+using where - it is used to restrict which rows to match against the next table
+
+not exists - It means that MySQL was able to do a LEFT JOIN optimization on the query
+
+4.2)
+mysql> explain SELECT Article.id, Article.title, Article.content
+    -> FROM Article
+    -> WHERE NOT EXISTS
+    -> (
+    ->   SELECT *
+    ->   FROM Comment
+    ->   WHERE Article.id = Comment.article_id
+    -> );
++----+--------------------+---------+------+---------------+------------+---------+----------------------+------+-------------+
+| id | select_type        | table   | type | possible_keys | key        | key_len | ref                  | rows | Extra       |
++----+--------------------+---------+------+---------------+------------+---------+----------------------+------+-------------+
+|  1 | PRIMARY            | Article | ALL  | NULL          | NULL       | NULL    | NULL                 |    5 | Using where |
+|  2 | DEPENDENT SUBQUERY | Comment | ref  | article_id    | article_id | 4       | exercise3.Article.id |    1 | Using index |
++----+--------------------+---------+------+---------------+------------+---------+----------------------+------+-------------+
+2 rows in set (0.01 sec)
+
+select-type:
+Primary - for the table in outer select
+Dependent Subquery - for the table which is the first select in subquery, dependent on outer query.
+
+
+Extra:
+using index - this means that the column information is retrieved
+from the table using only information in the index tree.
+
+Both queries are equal since they both calculate the same number of rows(5*1) to execute the query
